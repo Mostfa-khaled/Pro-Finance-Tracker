@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Finance Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="login-section" class="glass-panel login-box">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Log in to your terminal</p>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        <button class="primary-btn" onclick="simulateLogin()">Sign In</button>
+        <button class="secondary-btn" onclick="signUp()">Create Account</button>
+    </div>
+
+    <div id="dashboard-section" style="display: none;">
+        <header class="glass-panel">
+            <div class="header-left" style="display: flex; align-items: center; gap: 8px;">
+                <h2 id="header-title" style="font-size: 32px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Live Market Terminal</h2>
+                <span id="ig-verified-badge" style="display: none; align-items: center; margin-top: 6px;" title="Verified Pro User">
+                    <svg viewBox="0 0 40 40" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Z" fill="#0095F6"/>
+                        <path d="M27.413 14.319l2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fill="#FFFFFF"/>
+                    </svg>
+                </span>
+                <div style="margin-left: 15px; display: flex; align-items: center; gap: 6px;">
+                    <div class="live-pulse"></div>
+                    <span id="last-updated" class="badge">Updating...</span>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="main-content">
+                <div class="cards">
+                    <div class="glass-panel card">
+                        <span class="currency-label">USD / EGP (Bank)</span>
+                        <h3 class="price" id="usd-price">--.--</h3>
+                    </div>
+                    <div class="glass-panel card">
+                        <span class="currency-label">EUR / EGP</span>
+                        <h3 class="price" id="eur-price">--.--</h3>
+                    </div>
+                    <div class="glass-panel card highlight-card">
+                        <span class="currency-label">Pure Gold (EGP/g) - Sagha</span>
+                        <div class="gold-tiers">
+                            <div class="tier"><span>24k</span><h4 id="gold-24-price">--</h4></div>
+                            <div class="tier"><span>21k</span><h4 id="gold-21-price">--</h4></div>
+                            <div class="tier"><span>18k</span><h4 id="gold-18-price">--</h4></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-panel chart-container">
+                    <h3 style="font-size: 16px; margin-bottom: 10px; color: #8e8e93;">Live 24k Gold Trend (EGP)</h3>
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="glass-panel tool-box insight-box">
+                    <h3>🧠 Market Insights</h3>
+                    <p id="ai-insight">Analyzing live market data...</p>
+                </div>
+
+                <div class="glass-panel tool-box">
+                    <h3>🔄 Quick Exchange</h3>
+                    <div class="input-group">
+                        <input type="number" id="calc-amount" value="100" oninput="calculateExchange()">
+                        <select id="calc-currency" onchange="calculateExchange()">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+                    <div class="result-box">
+                        <span>Equals</span>
+                        <h4 id="calc-result">0.00 EGP</h4>
+                    </div>
+                </div>
+
+                <div class="glass-panel tool-box portfolio locked" id="portfolio-section">
+                    <div class="lock-overlay" id="lock-overlay">
+                        <h3>⭐ Pro Feature</h3>
+                        <p>Unlock personal net worth tracking.</p>
+                        <button class="gold-btn" onclick="openSubscriptionModal()">Upgrade to Pro</button>
+                    </div>
+
+                    <h3>💼 My Portfolio View</h3>
+                    <p class="subtitle">Calculate your net worth</p>
+                    <div class="portfolio-item">
+                        <label>Gold (Grams & Karat)</label>
+                        <div class="input-group">
+                            <input type="number" id="owned-gold" value="10" oninput="calculateNetWorth()" style="flex: 2;">
+                            <select id="gold-karat" onchange="calculateNetWorth()" style="flex: 1; margin: 8px 0;">
+                                <option value="24">24k</option>
+                                <option value="21">21k</option>
+                                <option value="18">18k</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="portfolio-item">
+                        <label>USD Cash</label>
+                        <input type="number" id="owned-usd" value="0" oninput="calculateNetWorth()">
+                    </div>
+                    <div class="net-worth-box">
+                        <span>Total Net Worth (EGP)</span>
+                        <h2 id="net-worth">0.00</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel locked pro-markets" id="premium-markets-section">
+            <div class="lock-overlay" id="lock-overlay-2">
+                <h3>👑 Pro Markets</h3>
+                <p>Unlock Live Crypto, Big Tech Stocks, & Egyptian Gold Ingots.</p>
+                <button class="gold-btn" onclick="openSubscriptionModal()" style="max-width: 250px;">Upgrade to Pro</button>
+            </div>
+            
+            <h3 style="margin-bottom: 20px; font-size: 22px;">💎 Premium Assets Tracker</h3>
+            <div class="pro-grid">
+                
+                <div class="pro-card">
+                    <h4 style="color: #0a84ff; margin-bottom: 15px;">Cryptocurrency (24h)</h4>
+                    <div class="asset-row">
+                        <span class="asset-name"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=025" width="16"> Bitcoin (BTC)</span> 
+                        <div class="asset-data">
+                            <span id="btc-spark"></span>
+                            <span id="btc-change" class="change-badge">--</span>
+                            <strong id="btc-price" class="flash-update">Loading...</strong>
+                            <button class="icon-btn" onclick="setAlert('BTC')" title="Set Alert">🔔</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025" width="16"> Ethereum (ETH)</span> 
+                        <div class="asset-data">
+                            <span id="eth-spark"></span>
+                            <span id="eth-change" class="change-badge">--</span>
+                            <strong id="eth-price" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('ETH')">Track</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pro-card">
+                    <h4 style="color: #34c759; margin-bottom: 15px;">Global Tech Stocks (24h)</h4>
+                    <div class="asset-row">
+                        <span class="asset-name">🍎 Apple (AAPL)</span> 
+                        <div class="asset-data">
+                            <span id="aapl-spark"></span>
+                            <span id="aapl-change" class="change-badge">--</span>
+                            <strong id="aapl-price" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('AAPL')">Track</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name">⚡ Tesla (TSLA)</span> 
+                        <div class="asset-data">
+                            <span id="tsla-spark"></span>
+                            <span id="tsla-change" class="change-badge">--</span>
+                            <strong id="tsla-price" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('TSLA')">Track</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name">🪟 Microsoft (MSFT)</span> 
+                        <div class="asset-data">
+                            <span id="msft-spark"></span>
+                            <span id="msft-change" class="change-badge">--</span>
+                            <strong id="msft-price" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('MSFT')">Track</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pro-card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="color: #FFD700; margin: 0;">Egyptian Gold Ingots / Sabeeka (24h Trend)</h4>
+                        <span style="font-size: 11px; color: #8e8e93;">*Includes authentic BTC Masna3eya & Damgha</span>
+                    </div>
+                    
+                    <div class="asset-row">
+                        <span class="asset-name">جنيه ذهب (Gold Pound 8g)</span> 
+                        <div class="asset-data">
+                            <span id="gold-pound-spark"></span>
+                            <span id="gold-pound-change" class="change-badge positive">+0.8%</span>
+                            <strong id="gold-pound" style="color: #FFD700;" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('Gold Pound')">Track</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name">2.5g Ingot (سبيكة 24k)</span> 
+                        <div class="asset-data">
+                            <span id="gold-2.5-spark"></span>
+                            <span id="gold-2.5-change" class="change-badge positive">+1.0%</span>
+                            <strong id="gold-2.5" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('2.5g Ingot')">Track</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name">5g Ingot (سبيكة 24k)</span> 
+                        <div class="asset-data">
+                            <span id="gold-5-spark"></span>
+                            <span id="gold-5-change" class="change-badge positive">+1.1%</span>
+                            <strong id="gold-5" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('5g Ingot')">Track</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name">10g Ingot (سبيكة 24k)</span> 
+                        <div class="asset-data">
+                            <span id="gold-10-spark"></span>
+                            <span id="gold-10-change" class="change-badge positive">+1.2%</span>
+                            <strong id="gold-10" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('10g Ingot')">Track</button>
+                        </div>
+                    </div>
+                    <div class="asset-row">
+                        <span class="asset-name">50g Ingot (سبيكة 24k)</span> 
+                        <div class="asset-data">
+                            <span id="gold-50-spark"></span>
+                            <span id="gold-50-change" class="change-badge positive">+1.2%</span>
+                            <strong id="gold-50" class="flash-update">Loading...</strong>
+                            <button class="track-btn" onclick="trackAsset('50g Ingot')">Track</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sub-modal" class="modal-bg" style="display: none;">
+        <div class="glass-panel modal-content" id="plan-selection" style="max-height: 90vh; overflow-y: auto;">
+            <h2>Upgrade to Premium</h2>
+            <p class="subtitle">Unlock crypto, big tech stocks, local gold ingots, & analytics.</p>
+            <div class="plan-card highlight-plan" onclick="showCheckout('Yearly', 60)"><div class="sale-badge">SAVE 37%</div><h3>Pro Yearly</h3><h2>$60.00 <span class="strikethrough">$96.00</span></h2><p class="plan-desc">Billed annually. Best value!</p></div>
+            <div class="plan-card" onclick="showCheckout('Monthly', 8)"><h3>Pro Monthly</h3><h2>$8.00 <span class="plan-desc">/ month</span></h2><p class="plan-desc">Cancel anytime.</p></div>
+            <div class="plan-card student-plan" onclick="showCheckout('Student', 0)"><h3>University Student</h3><h2>1 Month Free</h2><p class="plan-desc">Requires valid university email (.edu.eg)</p></div>
+            <button class="secondary-btn" onclick="closeSubscriptionModal()" style="margin-top: 15px;">Cancel</button>
+        </div>
+
+        <div class="glass-panel modal-content" id="checkout-section" style="display: none; max-height: 90vh; overflow-y: auto;">
+            <h2>Secure Checkout</h2><p class="subtitle" id="checkout-summary">...</p>
+            <div class="payment-method" style="margin-bottom: 20px;"><h3>👤 Claim Your Username</h3><input type="text" id="checkout-username" placeholder="e.g., Mostafa"><p class="plan-desc">This will display with a verified badge on your terminal.</p></div>
+            <div class="payment-method"><h3>💳 Credit Card</h3><input type="text" placeholder="Card Number" maxlength="19" oninput="this.value = this.value.replace(/[^0-9\s]/g, '')"><div style="display: flex; gap: 10px;"><input type="text" id="cc-date" placeholder="MM/YY" maxlength="5" oninput="formatDate()"><input type="text" id="cc-cvc" placeholder="CVC" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div><button class="primary-btn" onclick="processPayment()">Pay Securely</button></div>
+            <div class="divider">— OR —</div>
+            <div class="payment-method" id="fawry-input-box"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;"><h3 style="margin: 0;">FawryPay</h3><span style="background: #FDB931; color: black; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">فوري</span></div><input type="text" id="fawry-name" placeholder="Full Legal Name"><input type="tel" id="fawry-phone" placeholder="Phone Number" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><button class="gold-btn" onclick="generateFawryCode()" id="fawry-btn">Generate Reference Number</button></div>
+            <div class="payment-method instapay-box" id="fawry-reference-box" style="display: none; border-color: #FDB931; background: rgba(253, 185, 49, 0.05);"><h3>Your Fawry Reference Number</h3><p style="font-size: 14px; margin-bottom: 8px;">Pay <strong id="fawry-egp-price" style="color: #FDB931; font-size: 18px;">... EGP</strong> using this code:</p><div class="number-box" id="fawry-code" style="color: #FDB931;">Loading...</div></div>
+            <button class="secondary-btn" onclick="backToPlans()" style="margin-top: 15px;">Back to Plans</button>
+        </div>
+
+        <div class="glass-panel modal-content" id="student-section" style="display: none;">
+            <h2>Student Verification</h2><p class="subtitle">Claim your free month of Pro access.</p>
+            <div class="payment-method"><h3>👤 Claim Your Username</h3><input type="text" id="student-username" placeholder="e.g., Mostafa" style="margin-bottom: 15px;"><h3>🎓 Enter University Email</h3><input type="email" id="student-email-input" placeholder="e.g., test@nu.edu.eg"><p class="plan-desc" style="margin-top: 5px; margin-bottom: 15px;">Must end in <strong>.edu.eg</strong></p><button class="gold-btn" onclick="verifyStudent()">Verify & Unlock</button></div>
+            <button class="secondary-btn" onclick="backToPlans()" style="margin-top: 15px;">Back to Plans</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
